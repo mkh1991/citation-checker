@@ -39,10 +39,10 @@ table{width:100%;border-collapse:collapse;font-size:11px}
 thead{background:#f9fafb}
 th{font-size:10px;font-weight:500;color:#888;text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;white-space:nowrap;text-transform:uppercase}
 th:nth-child(1){width:32px}
-th:nth-child(2){width:40%}
+th:nth-child(2){width:50%;max-width:400px}
 th:nth-child(3){width:30%}
 th:nth-child(4){width:18%}
-th:nth-child(5){width:20%}
+th:nth-child(5){width:12%}
 td{padding:6px 8px;border-bottom:1px solid #f5f5f5;vertical-align:top;word-break:break-word;font-size:10px}
 tr:last-child td{border-bottom:none}
 .num{color:#aaa;font-weight:600;text-align:center}
@@ -62,6 +62,10 @@ tr:last-child td{border-bottom:none}
 .pend{color:#aaa;font-style:italic}
 .dl-bar{display:none;gap:6px;justify-content:flex-end;margin-top:.5rem}
 .dl-btn{font-size:11px;padding:6px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
+
+.cit-text{font-size:11px;line-height:1.4;word-wrap:break-word;white-space:normal;max-width:500px}
+.copy-btn{font-size:10px;padding:2px 6px;background:#f0f0f0;border:0.5px solid #ddd;border-radius:4px;cursor:pointer;white-space:nowrap}
+.copy-btn:active{background:#e0e0e0}
 </style>
 </head>
 <body>
@@ -101,7 +105,7 @@ tr:last-child td{border-bottom:none}
 <div class="tbl-wrap" id="tw">
   <table id="tbl">
     <thead><tr>
-      <th>#</th><th>Citation</th><th>URL</th><th>Source</th><th>Issues</th>
+      <th>#</th><th>Citation</th><th>URL</th><th>Source</th><th>Copy</th>
     </tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -128,7 +132,7 @@ function parseCitations(html){const paras=html.split(/<\/?p[^>]*>/i).map(p=>p.tr
 
 function extractUrl(plain){const m=plain.match(/https?:\/\/[^\s,>"')]+/);return m?m[0].replace(/[.,)]+$/,''):null;}
 
-function extractTitle(plain){let m=plain.match(/"([^"]{8,80})"/);if(m)return m[1];m=plain.match(/\*([^*]{8,80})\*/);if(m)return m[1];return plain.substring(0,80);}
+function extractTitle(plain){return plain.substring(0, 150);})"/);if(m)return m[1];m=plain.match(/\*([^*]{8,80})\*/);if(m)return m[1];return plain.substring(0,80);}
 
 async function fetchJson(url){try{const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});if(!r.ok){console.log('API error:',url,'status',r.status);return null;}return await r.json();}catch(e){console.log('Fetch error:',url,e.message);return null;}}
 
@@ -142,13 +146,7 @@ function issuesHtml(issues){if(!issues)return '…';if(!issues.length)return '�
 
 function urlCell(item){if(!item.urlResult)return '…';const {url}=item.urlResult;return url?`<a class="url-link" href="${E(url)}" target="_blank">${url.substring(0,30)}…</a>`:'-';}
 
-function addRow(item,i){const tr=document.createElement('tr');tr.innerHTML=`<td class="num">${i+1}</td><td class="ctext">${item.citation.html.substring(0,60)}</td><td id="url${i}">…</td><td id="src${i}">…</td><td class="issues-cell" id="iss${i}">${issuesHtml(item.issues)}</td>`;document.getElementById('tbody').appendChild(tr);}
-
-function updateRow(item,i){const u=document.getElementById('url'+i),s=document.getElementById('src'+i);if(u)u.innerHTML=urlCell(item);if(s)s.innerHTML=item.urlResult?srcBadge(item.urlResult.source):'-';}
-
-const fi=document.getElementById('fi');const fn=document.getElementById('fn');const rb=document.getElementById('rb');let docFile=null;
-
-fi.addEventListener('change',e=>{docFile=e.target.files[0];console.log('File selected:',docFile);if(docFile){fn.textContent='✓ '+docFile.name+' ('+Math.round(docFile.size/1024)+'KB)';fn.style.display='block';rb.disabled=false;log('File ready. Tap "Check citations" to start.');}else{fn.textContent='File selection failed';fn.style.display='block';log('No file');}});
+function addRow(item,i){const tr=document.createElement('tr');const citText=item.citation.plain;tr.innerHTML=`<td class="num">${i+1}</td><td class="cit-text">${E(citText)}</td><td id="url${i}">…</td><td id="src${i}">…</td><td><button class="copy-btn" onclick="navigator.clipboard.writeText('${E(citText)}')">📋</button></td>`;document.getElementById('tbody').appendChild(tr);});
 
 rb.addEventListener('click',async()=>{try{if(!docFile){console.log('No file selected');return;}if(typeof mammoth==='undefined'){console.log('Mammoth not loaded');return;}rb.disabled=true;const guide=STYLE_GUIDES[document.getElementById('sg').value];document.getElementById('pg').style.display='block';document.getElementById('tbody').innerHTML='';document.getElementById('tw').style.display='none';document.getElementById('summ').style.display='none';document.getElementById('dlbar').style.display='none';['s1','s2','s3'].forEach(id=>ss(id,''));
 
