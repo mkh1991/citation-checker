@@ -17,7 +17,7 @@ h1{font-size:18px;font-weight:600;margin-bottom:4px}
 select{width:100%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#111;margin-bottom:1rem}
 .run-btn{width:100%;height:40px;font-size:13px;font-weight:600;border-radius:8px;border:none;background:#2563eb;color:#fff;cursor:pointer;margin-bottom:1rem}
 .run-btn:disabled{background:#93c5fd;cursor:not-allowed}
-.fn{font-size:12px;color:#666;margin-bottom:1rem;background:#f0f7ff;padding:8px 10px;border-radius:6px;border-left:3px solid #2563eb}
+.fn{font-size:12px;color:#666;margin-bottom:1rem;background:#f0f7ff;padding:8px 10px;border-radius:6px;border-left:3px solid #2563eb;display:none}
 .prog{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem;margin-bottom:1rem;display:none}
 .step{display:flex;align-items:center;gap:8px;padding:3px 0}
 .dot{width:6px;height:6px;border-radius:50%;background:#ddd;flex-shrink:0}
@@ -30,7 +30,7 @@ select{width:100%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px s
 .pbwrap{height:3px;background:#f0f0f0;border-radius:2px;margin-top:5px;display:none}
 .pb{height:3px;background:#2563eb;border-radius:2px;width:0%;transition:width .1s}
 .ll{font-size:10px;color:#aaa;font-family:monospace;margin-top:4px;min-height:12px}
-.summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;display:none}
 .metric{background:#f9fafb;border-radius:8px;padding:.6rem;flex:1;min-width:60px;text-align:center}
 .metric-label{font-size:10px;color:#888;margin-bottom:2px}
 .metric-val{font-size:18px;font-weight:500}
@@ -38,15 +38,9 @@ select{width:100%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px s
 table{width:100%;border-collapse:collapse;font-size:11px}
 thead{background:#f9fafb}
 th{font-size:10px;font-weight:500;color:#888;text-align:left;padding:6px 8px;border-bottom:1px solid #e5e7eb;white-space:nowrap;text-transform:uppercase}
-th:nth-child(1){width:32px}
-th:nth-child(2){width:40%}
-th:nth-child(3){width:30%}
-th:nth-child(4){width:18%}
-th:nth-child(5){width:20%}
 td{padding:6px 8px;border-bottom:1px solid #f5f5f5;vertical-align:top;word-break:break-word;font-size:10px}
 tr:last-child td{border-bottom:none}
 .num{color:#aaa;font-weight:600;text-align:center}
-.ctext em{font-style:italic}
 .src-badge{font-size:9px;padding:2px 6px;border-radius:20px;font-weight:600;white-space:nowrap;display:inline-block}
 .src-doc{background:#dbeafe;color:#1e40af}
 .src-ss{background:#dcfce7;color:#166534}
@@ -54,31 +48,26 @@ tr:last-child td{border-bottom:none}
 .src-cr{background:#ede9fe;color:#5b21b6}
 .src-no{background:#f3f4f6;color:#6b7280}
 .url-link{font-size:9px;color:#2563eb;word-break:break-all}
-.issues-cell{font-size:9px}
-.iss{margin-bottom:1px}
-.iss-err{color:#991b1b}
-.iss-warn{color:#92400e}
-.ok-txt{color:#166534}
-.pend{color:#aaa;font-style:italic}
+.pend{color:#aaa;font-style:italic;font-size:10px}
+.ok-txt{color:#16a34a;font-size:10px}
 .dl-bar{display:none;gap:6px;justify-content:flex-end;margin-top:.5rem}
 .dl-btn{font-size:11px;padding:6px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
 </style>
 </head>
 <body>
+
 <h1>Citation checker</h1>
-<p class="sub">Upload a .docx bibliography. Finds missing URLs via free APIs. Checks format rules.</p>
+<p class="sub">Upload a .docx. Finds missing URLs. Checks Chicago Author-Date format.</p>
 
 <div class="setup">
   <input type="file" id="fi" accept=".docx"/>
-  <div class="fn" id="fn" style="display:none"></div>
-
+  <div class="fn" id="fn"></div>
   <div class="sel-wrap">
     <label for="sg">Style guide</label>
     <select id="sg">
       <option value="chicago-ad">Chicago Author-Date (18th ed.)</option>
     </select>
   </div>
-
   <button class="run-btn" id="rb" disabled>Check citations ↗</button>
 </div>
 
@@ -90,7 +79,7 @@ tr:last-child td{border-bottom:none}
   <div class="ll" id="ll"></div>
 </div>
 
-<div class="summary" id="summ" style="display:none">
+<div class="summary" id="summ">
   <div class="metric"><div class="metric-label">Total</div><div class="metric-val" id="m-total">—</div></div>
   <div class="metric"><div class="metric-label">In doc</div><div class="metric-val" id="m-indoc">—</div></div>
   <div class="metric"><div class="metric-label">Found</div><div class="metric-val" id="m-found">—</div></div>
@@ -100,9 +89,7 @@ tr:last-child td{border-bottom:none}
 
 <div class="tbl-wrap" id="tw">
   <table id="tbl">
-    <thead><tr>
-      <th>#</th><th>Citation</th><th>URL</th><th>Source</th><th>Issues</th>
-    </tr></thead>
+    <thead><tr><th>#</th><th>Citation</th><th>URL</th><th>Source</th><th>Issues</th></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
@@ -113,67 +100,251 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script>
-const E=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const log=m=>document.getElementById('ll').textContent=m;
-const setPb=(d,t)=>document.getElementById('pb').style.width=Math.round(d/t*100)+'%';
-function ss(id,st){const e=document.getElementById(id);if(!e)return;e.classList.remove('done','active');if(st)e.classList.add(st);}
-const stripS=h=>h.replace(/<(?!\/?em|\/?strong)[^>]+>/gi,'').replace(/&nbsp;/g,' ').trim();
-const stripA=h=>h.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+// Helpers
+const E = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const log = m => { const el = document.getElementById('ll'); if(el) el.textContent = m; };
+const setPb = (d, t) => { const el = document.getElementById('pb'); if(el) el.style.width = Math.round(d/t*100) + '%'; };
+function ss(id, st) {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.classList.remove('done', 'active');
+  if (st) e.classList.add(st);
+}
 
-const STYLE_GUIDES={'chicago-ad':{name:'Chicago Author-Date',check(plain){const issues=[];const ym=plain.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b|n\.d\./);if(!ym)issues.push({sev:'error',msg:'No year'});else{const yr=ym[0];if(plain.includes('('+yr+')'))issues.push({sev:'error',msg:'Year in parens'});}const fs=plain.split(/\.\s+(?:1[5-9]\d{2}|20[0-2]\d|n\.d\.)/)[0];if(fs&&fs.length<120&&!fs.includes(','))issues.push({sev:'warning',msg:'Author format'});if(!/\.$/.test(plain.trim()))issues.push({sev:'error',msg:'No period'});return issues;}}};;
+const stripS = h => h.replace(/<(?!\/?em|\/?strong)[^>]+>/gi, '').replace(/&nbsp;/g, ' ').trim();
+const stripA = h => h.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
 
-async function extractDocx(buf){const r=await mammoth.convertToHtml({arrayBuffer:buf},{styleMap:["i => em","b => strong"]});return r.value;}
+// Style guides
+const STYLE_GUIDES = {
+  'chicago-ad': {
+    name: 'Chicago Author-Date',
+    check(plain) {
+      const issues = [];
+      const ym = plain.match(/\b(1[5-9]\d{2}|20[0-2]\d)\b|n\.d\./);
+      if (!ym) issues.push({sev:'error', msg:'No year'});
+      else {
+        const yr = ym[0];
+        if (plain.includes('(' + yr + ')')) issues.push({sev:'error', msg:'Year in parens'});
+      }
+      const fs = plain.split(/\.\s+(?:1[5-9]\d{2}|20[0-2]\d|n\.d\.)/)[0];
+      if (fs && fs.length < 120 && !fs.includes(',')) issues.push({sev:'warning', msg:'Author format'});
+      if (!/\.$/.test(plain.trim())) issues.push({sev:'error', msg:'No period'});
+      return issues;
+    }
+  }
+};
 
-function parseCitations(html){const paras=html.split(/<\/?p[^>]*>/i).map(p=>p.trim()).filter(p=>p.length>15);if(paras.length<2)return[{html:E(html),plain:stripA(html)}];const plains=paras.map(p=>stripA(p));return paras.map((p,i)=>({html:stripS(p).replace(/^\[?\d+\]?\.?\s+/,'').trim(),plain:plains[i].replace(/^\[?\d+\]?\.?\s+/,'').trim()})).filter(c=>c.plain.length>15);}
+// Extract docx
+async function extractDocx(buf) {
+  const r = await mammoth.convertToHtml({arrayBuffer: buf}, {styleMap: ["i => em", "b => strong"]});
+  return r.value;
+}
 
-function extractUrl(plain){const m=plain.match(/https?:\/\/[^\s,>"')]+/);return m?m[0].replace(/[.,)]+$/,''):null;}
+// Parse citations
+function parseCitations(html) {
+  const paras = html.split(/<\/?p[^>]*>/i).map(p => p.trim()).filter(p => p.length > 15);
+  if (paras.length < 2) return [{html: E(html), plain: stripA(html)}];
+  const plains = paras.map(p => stripA(p));
+  return paras.map((p, i) => ({
+    html: stripS(p).replace(/^\[?\d+\]?\.?\s+/, '').trim(),
+    plain: plains[i].replace(/^\[?\d+\]?\.?\s+/, '').trim()
+  })).filter(c => c.plain.length > 15);
+}
 
-function extractTitle(plain){let m=plain.match(/"([^"]{8,80})"/);if(m)return m[1];m=plain.match(/\*([^*]{8,80})\*/);if(m)return m[1];return plain.substring(0,80);}
+function extractUrl(plain) {
+  const m = plain.match(/https?:\/\/[^\s,>"')]+/);
+  return m ? m[0].replace(/[.,)]+$/, '') : null;
+}
 
-async function fetchJson(url){try{const r=await fetch(url,{headers:{'User-Agent':'Mozilla/5.0'}});if(!r.ok){console.log('API error:',url,'status',r.status);return null;}return await r.json();}catch(e){console.log('Fetch error:',url,e.message);return null;}}
+// API call
+async function fetchJson(url) {
+  try {
+    const r = await fetch(url, {headers: {'User-Agent': 'Mozilla/5.0'}});
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
 
-async function findUrl(citation){const existing=extractUrl(citation.plain);if(existing)return{url:existing,source:'Already in doc'};const title=extractTitle(citation.plain);try{const endpoint=window.location.hostname==='localhost'?'http://localhost:3000/api/search':'/api/search';const res=await fetch(`${endpoint}?title=${encodeURIComponent(title)}`);const data=await res.json();return data;}catch(e){console.log('Backend error:',e);return{url:null,source:'Not found'};}}
+// Find URL
+async function findUrl(citation) {
+  const existing = extractUrl(citation.plain);
+  if (existing) return {url: existing, source: 'Already in doc'};
+  const title = citation.plain.substring(0, 150);
+  try {
+    const endpoint = window.location.hostname === 'localhost' ? 'http://localhost:3000/api/search' : '/api/search';
+    const res = await fetch(`${endpoint}?title=${encodeURIComponent(title)}`);
+    const data = await res.json();
+    return data;
+  } catch(e) {
+    return {url: null, source: 'Not found'};
+  }
+}
 
-async function runBatched(items,fn,batchSize,onDone){for(let i=0;i<items.length;i+=batchSize){await Promise.all(items.slice(i,i+batchSize).map(async item=>{await fn(item);onDone();}));}}
+// Batch runner
+async function runBatched(items, fn, batchSize, onDone) {
+  for (let i = 0; i < items.length; i += batchSize) {
+    await Promise.all(items.slice(i, i + batchSize).map(async item => {
+      await fn(item);
+      onDone();
+    }));
+  }
+}
 
-function srcBadge(source){const cls={'Already in doc':'src-doc','Semantic Scholar':'src-ss','OpenAlex':'src-oa','Not found':'src-no'}[source]||'src-no';return `<span class="src-badge ${cls}">${source}</span>`;}
+// UI helpers
+function srcBadge(source) {
+  const cls = {'Already in doc':'src-doc','Semantic Scholar':'src-ss','OpenAlex':'src-oa','CrossRef':'src-cr','Not found':'src-no'}[source] || 'src-no';
+  return `<span class="src-badge ${cls}">${source}</span>`;
+}
 
-function issuesHtml(issues){if(!issues)return '…';if(!issues.length)return '✓';return issues.map(iss=>`<div class="iss ${iss.sev==='error'?'iss-err':'iss-warn'}">${iss.msg}</div>`).join('');}
+function issuesHtml(issues) {
+  if (!issues) return '<span class="pend">…</span>';
+  if (!issues.length) return '<span class="ok-txt">✓</span>';
+  return issues.map(iss => `<div><span>${iss.msg}</span></div>`).join('');
+}
 
-function urlCell(item){if(!item.urlResult)return '…';const {url}=item.urlResult;return url?`<a class="url-link" href="${E(url)}" target="_blank">${url.substring(0,30)}…</a>`:'-';}
+function urlCell(item) {
+  if (!item.urlResult) return '<span class="pend">…</span>';
+  const {url} = item.urlResult;
+  return url ? `<a class="url-link" href="${E(url)}" target="_blank">${url.substring(0,40)}…</a>` : '-';
+}
 
-function addRow(item,i){const tr=document.createElement('tr');tr.innerHTML=`<td class="num">${i+1}</td><td class="ctext">${item.citation.html.substring(0,60)}</td><td id="url${i}">…</td><td id="src${i}">…</td><td class="issues-cell" id="iss${i}">${issuesHtml(item.issues)}</td>`;document.getElementById('tbody').appendChild(tr);}
+function addRow(item, i) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td class="num">${i+1}</td><td>${E(item.citation.plain)}</td><td id="url${i}"><span class="pend">…</span></td><td id="src${i}"><span class="pend">…</span></td><td id="iss${i}">${issuesHtml(item.issues)}</td>`;
+  document.getElementById('tbody').appendChild(tr);
+}
 
-function updateRow(item,i){const u=document.getElementById('url'+i),s=document.getElementById('src'+i);if(u)u.innerHTML=urlCell(item);if(s)s.innerHTML=item.urlResult?srcBadge(item.urlResult.source):'-';}
+function updateRow(item, i) {
+  const u = document.getElementById('url' + i);
+  const s = document.getElementById('src' + i);
+  if (u) u.innerHTML = urlCell(item);
+  if (s) s.innerHTML = item.urlResult ? srcBadge(item.urlResult.source) : '<span class="pend">…</span>';
+}
 
-const fi=document.getElementById('fi');const fn=document.getElementById('fn');const rb=document.getElementById('rb');let docFile=null;
+// Setup
+const fi = document.getElementById('fi');
+const fn = document.getElementById('fn');
+const rb = document.getElementById('rb');
+let docFile = null;
 
-fi.addEventListener('change',e=>{docFile=e.target.files[0];console.log('File selected:',docFile);if(docFile){fn.textContent='✓ '+docFile.name+' ('+Math.round(docFile.size/1024)+'KB)';fn.style.display='block';rb.disabled=false;log('File ready. Tap "Check citations" to start.');}else{fn.textContent='File selection failed';fn.style.display='block';log('No file');}});
+fi.addEventListener('change', (e) => {
+  docFile = e.target.files[0];
+  if (docFile) {
+    fn.textContent = '✓ ' + docFile.name;
+    fn.style.display = 'block';
+    rb.disabled = false;
+    log('File ready. Tap "Check citations" to start.');
+  } else {
+    fn.textContent = 'File selection failed';
+    fn.style.display = 'block';
+    log('No file');
+  }
+});
 
-rb.addEventListener('click',async()=>{try{if(!docFile){console.log('No file selected');return;}if(typeof mammoth==='undefined'){console.log('Mammoth not loaded');return;}rb.disabled=true;const guide=STYLE_GUIDES[document.getElementById('sg').value];document.getElementById('pg').style.display='block';document.getElementById('tbody').innerHTML='';document.getElementById('tw').style.display='none';document.getElementById('summ').style.display='none';document.getElementById('dlbar').style.display='none';['s1','s2','s3'].forEach(id=>ss(id,''));
-
-ss('s1','active');log('Reading…');let rawHtml='';try{const buf=await docFile.arrayBuffer();rawHtml=await extractDocx(buf);}catch(e){log('Error reading file: '+e.message);console.error(e);rb.disabled=false;return;}
-const citations=parseCitations(rawHtml);ss('s1','done');log(`Found ${citations.length}.`);
-
-const items=citations.map((c,i)=>({index:i,citation:c,issues:null,urlResult:null}));
-
-ss('s2','active');items.forEach(item=>{item.issues=guide.check(item.citation.plain);});ss('s2','done');
-
-document.getElementById('tw').style.display='block';items.forEach((item,i)=>addRow(item,i));
-
-ss('s3','active');document.getElementById('pbw').style.display='block';let done=0;
-await runBatched(items,async item=>{item.urlResult=await findUrl(item.citation);updateRow(item,item.index);},5,()=>{done++;setPb(done,items.length);log(`URLs: ${done}/${items.length}`);});
-document.getElementById('pbw').style.display='none';ss('s3','done');log('Done.');
-
-const nInDoc=items.filter(i=>i.urlResult?.source==='Already in doc').length;const nFound=items.filter(i=>i.urlResult?.url&&i.urlResult.source!=='Already in doc').length;const nMissing=items.filter(i=>!i.urlResult?.url).length;const nIssues=items.filter(i=>i.issues?.some(x=>x.sev==='error')).length;
-document.getElementById('m-total').textContent=items.length;document.getElementById('m-indoc').textContent=nInDoc;document.getElementById('m-found').textContent=nFound;document.getElementById('m-missing').textContent=nMissing;document.getElementById('m-issues').textContent=nIssues;
-document.getElementById('summ').style.display='flex';document.getElementById('dlbar').style.display='flex';
-
-document.getElementById('dlmd').onclick=()=>{let md=`# Citations\n\n`;items.forEach((item,i)=>{const url=item.urlResult?.url||'';const src=item.urlResult?.source||'';const iss=(item.issues||[]).map(x=>x.msg).join('; ')||'✓';md+=`${i+1}. ${item.citation.plain}\n   URL: ${url}\n   Source: ${src}\n   Issues: ${iss}\n\n`;});const a=document.createElement('a');a.href='data:text/markdown;charset=utf-8,'+encodeURIComponent(md);a.download='citations.md';a.click();};
-
-document.getElementById('dlcsv').onclick=()=>{const rows=[['#','Citation','URL','Source','Issues']];items.forEach((item,i)=>{const url=item.urlResult?.url||'';const src=item.urlResult?.source||'';const iss=(item.issues||[]).map(x=>x.msg).join(' | ')||'ok';rows.push([i+1,item.citation.plain,url,src,iss]);});const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='citations.csv';a.click();};
-
-rb.disabled=false;}catch(e){console.error('Unexpected error:',e);log('Error: '+e.message);rb.disabled=false;}});
+rb.addEventListener('click', async () => {
+  try {
+    if (!docFile) { log('No file'); return; }
+    if (typeof mammoth === 'undefined') { log('Loading...'); return; }
+    rb.disabled = true;
+    
+    const guide = STYLE_GUIDES[document.getElementById('sg').value];
+    document.getElementById('pg').style.display = 'block';
+    document.getElementById('tbody').innerHTML = '';
+    document.getElementById('tw').style.display = 'none';
+    document.getElementById('summ').style.display = 'none';
+    document.getElementById('dlbar').style.display = 'none';
+    ['s1','s2','s3'].forEach(id => ss(id, ''));
+    
+    ss('s1', 'active');
+    log('Reading…');
+    let rawHtml = '';
+    try {
+      const buf = await docFile.arrayBuffer();
+      rawHtml = await extractDocx(buf);
+    } catch(e) {
+      log('Error reading file');
+      rb.disabled = false;
+      return;
+    }
+    const citations = parseCitations(rawHtml);
+    ss('s1', 'done');
+    log(`Found ${citations.length}.`);
+    
+    const items = citations.map((c, i) => ({index: i, citation: c, issues: null, urlResult: null}));
+    
+    ss('s2', 'active');
+    items.forEach(item => { item.issues = guide.check(item.citation.plain); });
+    ss('s2', 'done');
+    
+    document.getElementById('tw').style.display = 'block';
+    items.forEach((item, i) => addRow(item, i));
+    
+    ss('s3', 'active');
+    document.getElementById('pbw').style.display = 'block';
+    let done = 0;
+    await runBatched(items, async item => {
+      item.urlResult = await findUrl(item.citation);
+      updateRow(item, item.index);
+    }, 5, () => {
+      done++;
+      setPb(done, items.length);
+      log(`URLs: ${done}/${items.length}`);
+    });
+    document.getElementById('pbw').style.display = 'none';
+    ss('s3', 'done');
+    log('Done.');
+    
+    const nInDoc = items.filter(i => i.urlResult?.source === 'Already in doc').length;
+    const nFound = items.filter(i => i.urlResult?.url && i.urlResult.source !== 'Already in doc').length;
+    const nMissing = items.filter(i => !i.urlResult?.url).length;
+    const nIssues = items.filter(i => i.issues?.some(x => x.sev === 'error')).length;
+    
+    document.getElementById('m-total').textContent = items.length;
+    document.getElementById('m-indoc').textContent = nInDoc;
+    document.getElementById('m-found').textContent = nFound;
+    document.getElementById('m-missing').textContent = nMissing;
+    document.getElementById('m-issues').textContent = nIssues;
+    document.getElementById('summ').style.display = 'flex';
+    document.getElementById('dlbar').style.display = 'flex';
+    
+    document.getElementById('dlmd').onclick = () => {
+      let md = `# Citations\n\n`;
+      items.forEach((item, i) => {
+        const url = item.urlResult?.url || '';
+        const src = item.urlResult?.source || '';
+        const iss = (item.issues || []).map(x => x.msg).join('; ') || '✓';
+        md += `${i+1}. ${item.citation.plain}\n   URL: ${url}\n   Source: ${src}\n   Issues: ${iss}\n\n`;
+      });
+      const a = document.createElement('a');
+      a.href = 'data:text/markdown;charset=utf-8,' + encodeURIComponent(md);
+      a.download = 'citations.md';
+      a.click();
+    };
+    
+    document.getElementById('dlcsv').onclick = () => {
+      const rows = [['#','Citation','URL','Source','Issues']];
+      items.forEach((item, i) => {
+        const url = item.urlResult?.url || '';
+        const src = item.urlResult?.source || '';
+        const iss = (item.issues || []).map(x => x.msg).join(' | ') || 'ok';
+        rows.push([i+1, item.citation.plain, url, src, iss]);
+      });
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'citations.csv';
+      a.click();
+    };
+    
+    rb.disabled = false;
+  } catch(e) {
+    log('Error: ' + e.message);
+    rb.disabled = false;
+  }
+});
 </script>
+
 </body>
 </html>
