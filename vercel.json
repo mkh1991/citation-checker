@@ -1,0 +1,1 @@
+{"buildCommand":"echo 'Static + serverless'","outputDirectory":".","rewrites":[{"source":"/api/:path*","destination":"/api/:path*"}]}
